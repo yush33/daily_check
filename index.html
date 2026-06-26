@@ -1019,19 +1019,24 @@ function computeStreaks(){
   return{cur,best};
 }
 function renderStats(){
-  const sD=new Date(cfg.start),eD=new Date(cfg.end);
-  const now=new Date();now.setHours(0,0,0,0);const eff=now<eD?now:eD;
+  const todayStr=todayDs();
+  const effStr=todayStr<cfg.end?todayStr:cfg.end;
+  const startStr=cfg.start;
   const ist={};items.forEach(it=>ist[it.id]={done:0,fail:0,skip:0,total:0});
-  let c=new Date(sD);
-  while(c<=eff){
-    const s=c.toISOString().split('T')[0];const dd=data[s]||{};
+  // 로컬 날짜 문자열 기준으로 순회 (시간대 버그 방지)
+  let c=new Date(startStr+'T00:00:00');
+  while(true){
+    const s=mkDs(c.getFullYear(),c.getMonth(),c.getDate());
+    if(s>effStr)break;
+    const dd=data[s]||{};
     items.forEach(it=>{if(!applies(it,s))return;const st=dd[it.id]||null;const iv=ist[it.id];iv.total++;
       if(st==='done')iv.done++;else if(st==='fail')iv.fail++;else if(st==='skip')iv.skip++;});
     c.setDate(c.getDate()+1);
   }
   let tD=0,tF=0;Object.values(ist).forEach(s=>{tD+=s.done;tF+=s.fail;});
   const ns=tD+tF;const pct=ns>0?Math.round(tD/ns*100):0;
-  const passed=Math.floor((eff-sD)/86400000)+1,total=Math.floor((eD-sD)/86400000)+1;
+  const passed=Math.max(1,Math.floor((new Date(effStr+'T00:00:00')-new Date(startStr+'T00:00:00'))/86400000)+1);
+  const total=Math.floor((new Date(cfg.end+'T00:00:00')-new Date(startStr+'T00:00:00'))/86400000)+1;
   document.getElementById('ov-card').innerHTML=
     `<div class="ov-card"><div class="ov-num">${pct}%</div><div class="ov-lbl">전체 달성률</div></div>`+
     `<div class="ov-card"><div class="ov-num">${tD}</div><div class="ov-lbl">완료 횟수</div></div>`+
@@ -1048,12 +1053,16 @@ function renderStats(){
   });
   const me=document.getElementById('mon-stats');me.innerHTML='';
   [{y:2026,m:5,lbl:'6월'},{y:2026,m:6,lbl:'7월'},{y:2026,m:7,lbl:'8월'}].forEach(({y,m,lbl})=>{
-    let d=0,f=0,sk=0;const fi=new Date(y,m,1),la=new Date(y,m+1,0);
-    let c2=new Date(Math.max(fi,sD));const e2=new Date(Math.min(la,eff));
-    while(c2<=e2){const s=c2.toISOString().split('T')[0];const dd=data[s]||{};
-      items.forEach(it=>{if(!applies(it,s))return;const st=dd[it.id]||null;if(st==='done')d++;else if(st==='fail')f++;else if(st==='skip')sk++;});c2.setDate(c2.getDate()+1);}
+    let d=0,f=0,sk=0;
+    const fiStr=mkDs(y,m,1),laStr=mkDs(y,m,new Date(y,m+1,0).getDate());
+    const rangeStart=fiStr>startStr?fiStr:startStr;
+    const rangeEnd=laStr<effStr?laStr:effStr;
+    if(rangeStart>rangeEnd){me.innerHTML+=`<div class="stat-card"><div class="stat-row">${lbl}<span class="stat-pct">0%</span></div><div class="bar-bg"><div class="bar-fill" style="width:0%"></div></div><div class="stat-sub"><span style="color:var(--green)">O 0</span><span style="color:var(--red)">X 0</span><span style="color:var(--amber)">▲ 0</span></div></div>`;return;}
+    let c2=new Date(rangeStart+'T00:00:00');
+    while(true){const s=mkDs(c2.getFullYear(),c2.getMonth(),c2.getDate());if(s>rangeEnd)break;
+      const dd=data[s]||{};items.forEach(it=>{if(!applies(it,s))return;const st=dd[it.id]||null;if(st==='done')d++;else if(st==='fail')f++;else if(st==='skip')sk++;});c2.setDate(c2.getDate()+1);}
     const np2=d+f;const p2=np2>0?Math.round(d/np2*100):0;
-    me.innerHTML+=`<div class="stat-card"><div class="stat-row">${lbl}<span class="stat-pct">${p2}%</span></div><div class="bar-bg"><div class="bar-fill" style="width:${p2}%"></div></div><div class="stat-sub"><span style="color:var(--green)">O ${d}</span><span style="color:var(--red)">X ${f}</span><span style="color:var(--amber)">~ ${sk}</span></div></div>`;
+    me.innerHTML+=`<div class="stat-card"><div class="stat-row">${lbl}<span class="stat-pct">${p2}%</span></div><div class="bar-bg"><div class="bar-fill" style="width:${p2}%"></div></div><div class="stat-sub"><span style="color:var(--green)">O ${d}</span><span style="color:var(--red)">X ${f}</span><span style="color:var(--amber)">▲ ${sk}</span></div></div>`;
   });
 }
 
