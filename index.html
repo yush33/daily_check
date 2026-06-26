@@ -6,6 +6,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="여름방학">
+<meta name="theme-color" content="#fdf8f4">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.png">
 <title>여름방학 목표</title>
 <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
 <style>
@@ -1125,6 +1128,7 @@ function switchView(v){
   });
   document.getElementById('fab').classList.toggle('show',v==='timetable');
   document.getElementById('main').scrollTop=0;
+  if(v==='calendar')renderCalendar();
   if(v==='stats')renderStats();
   if(v==='timetable')renderTimetable();
   if(v==='settings'){

@@ -1,0 +1,16 @@
+{
+  "name": "여름방학 목표",
+  "short_name": "여름방학",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#fdf8f4",
+  "theme_color": "#fdf8f4",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
